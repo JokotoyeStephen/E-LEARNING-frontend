@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { 
+    @apply bg-surface-50 text-gray-900 font-sans antialiased; 
+    background-image: radial-gradient(circle at 20% 80%, rgba(124,58,237,0.04) 0%, transparent 50%),
+                      radial-gradient(circle at 80% 20%, rgba(124,58,237,0.03) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+}
+
+@layer components {
+  .page-container { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10; }
+  
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-primary-500 text-white font-semibold 
+           px-5 py-2.5 rounded-xl hover:bg-primary-600 active:scale-[0.98] 
+           transition-all duration-150 shadow-purple;
+  }
+  
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 border border-primary-200 text-primary-600 
+           font-semibold px-5 py-2.5 rounded-xl hover:bg-primary-50 active:scale-[0.98] 
+           transition-all duration-150;
+  }
+  
+  .card {
+    @apply bg-white rounded-2xl border border-gray-100 shadow-card;
+  }
+  
+  .badge {
+    @apply inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full;
+  }
+
+  .section-label {
+    @apply inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest 
+           text-primary-600 bg-primary-50 px-3 py-1.5 rounded-full mb-3;
+  }
+
+  .animate-stagger > * {
+    @apply opacity-0 animate-fade-up;
+  }
+  .animate-stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .animate-stagger > *:nth-child(2) { animation-delay: 80ms; }
+  .animate-stagger > *:nth-child(3) { animation-delay: 160ms; }
+  .animate-stagger > *:nth-child(4) { animation-delay: 240ms; }
+  .animate-stagger > *:nth-child(5) { animation-delay: 320ms; }
+  .animate-stagger > *:nth-child(6) { animation-delay: 400ms; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { @apply bg-gray-200 rounded-full; }
+::-webkit-scrollbar-thumb:hover { @apply bg-gray-300; }
+
+/* Ticker animation */
+@keyframes ticker {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Pulse dot */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
