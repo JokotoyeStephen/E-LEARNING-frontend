@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
 import { AuthProvider } from './context/AuthContext'
 import { useAuth } from './hooks/useAuth'
 import ProtectedRoute       from './routes/ProtectedRoute'
@@ -23,6 +24,7 @@ import LectureSpace         from './pages/lecture/LectureSpace'
 import Achievements         from './pages/achievements/Achievements'
 import LearningAnalytics    from './pages/analytics/LearningAnalytics'
 import ChatWidget           from './components/chat/ChatWidget'
+import PageTransition       from './components/motion/PageTransition'
 import VerifyCertificate    from './pages/verify/VerifyCertificate'
 import NotFound             from './pages/NotFound'
 
@@ -40,6 +42,39 @@ function AuthedChatWidget() {
   return <ChatWidget />
 }
 
+function AnimatedRoutes() {
+  const location = useLocation()
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/login"        element={<PageTransition><Login /></PageTransition>} />
+        <Route path="/register"     element={<PageTransition><Register /></PageTransition>} />
+        <Route path="/verify-email" element={<PageTransition><VerifyEmail /></PageTransition>} />
+        <Route path="/verify/:certificateId" element={<PageTransition><VerifyCertificate /></PageTransition>} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/"                          element={<PageTransition><SmartDashboard /></PageTransition>} />
+          <Route path="/dashboard"                 element={<PageTransition><SmartDashboard /></PageTransition>} />
+          <Route path="/courses"                   element={<PageTransition><Courses /></PageTransition>} />
+          <Route path="/courses/:id"               element={<PageTransition><CourseDetails /></PageTransition>} />
+          <Route path="/courses/:id/learn"         element={<PageTransition><CourseLearn /></PageTransition>} />
+          <Route path="/quiz/:courseId"            element={<PageTransition><Quiz /></PageTransition>} />
+          <Route path="/quiz/:courseId/result"     element={<PageTransition><Result /></PageTransition>} />
+          <Route path="/quiz/:courseId/progress"   element={<PageTransition><Progress /></PageTransition>} />
+          <Route path="/roadmap"                   element={<PageTransition><Roadmap /></PageTransition>} />
+          <Route path="/learn"                     element={<PageTransition><LearnSpace /></PageTransition>} />
+          <Route path="/videos"                    element={<PageTransition><Videos /></PageTransition>} />
+          <Route path="/achievements"              element={<PageTransition><Achievements /></PageTransition>} />
+          <Route path="/analytics"                 element={<PageTransition><LearningAnalytics /></PageTransition>} />
+          <Route path="/instructor/courses/:id"    element={<PageTransition><InstructorCourseAnalytics /></PageTransition>} />
+          <Route path="/lecture"                   element={<PageTransition><LectureSpace /></PageTransition>} />
+          <Route path="/lecture/:courseId/:lectureId" element={<PageTransition><LectureSpace /></PageTransition>} />
+        </Route>
+        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+      </Routes>
+    </AnimatePresence>
+  )
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -47,31 +82,7 @@ export default function App() {
         <div className="flex flex-col min-h-screen">
           <Navbar />
           <main className="flex-1">
-            <Routes>
-              <Route path="/login"        element={<Login />} />
-              <Route path="/register"     element={<Register />} />
-              <Route path="/verify-email" element={<VerifyEmail />} />
-              <Route path="/verify/:certificateId" element={<VerifyCertificate />} />
-              <Route element={<ProtectedRoute />}>
-                <Route path="/"                          element={<SmartDashboard />} />
-                <Route path="/dashboard"                 element={<SmartDashboard />} />
-                <Route path="/courses"                   element={<Courses />} />
-                <Route path="/courses/:id"               element={<CourseDetails />} />
-                <Route path="/courses/:id/learn"         element={<CourseLearn />} />
-                <Route path="/quiz/:courseId"            element={<Quiz />} />
-                <Route path="/quiz/:courseId/result"     element={<Result />} />
-                <Route path="/quiz/:courseId/progress"   element={<Progress />} />
-                <Route path="/roadmap"                   element={<Roadmap />} />
-                <Route path="/learn"                     element={<LearnSpace />} />
-                <Route path="/videos"                    element={<Videos />} />
-                <Route path="/achievements"              element={<Achievements />} />
-                <Route path="/analytics"                 element={<LearningAnalytics />} />
-                <Route path="/instructor/courses/:id"    element={<InstructorCourseAnalytics />} />
-                <Route path="/lecture"                   element={<LectureSpace />} />
-                <Route path="/lecture/:courseId/:lectureId" element={<LectureSpace />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <AnimatedRoutes />
           </main>
           <Footer />
           <AuthedChatWidget />

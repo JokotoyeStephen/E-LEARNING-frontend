@@ -8,7 +8,7 @@ import { Eye, EyeOff, Lock, Mail, ArrowRight } from 'lucide-react'
 export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
-  
+
   const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [unverified, setUnverified] = useState(false)
@@ -22,7 +22,7 @@ export default function Login() {
     setError('')
     setUnverified(false)
     setLoading(true)
-    
+
     try {
       await login(form.email, form.password)
       navigate('/dashboard')
@@ -37,16 +37,25 @@ export default function Login() {
     }
   }
 
+  const canSubmit = form.email.trim() && form.password.trim() && !loading
+
   return (
     <div className="min-h-screen flex">
       {/* Left Side - Image / Gradient */}
       <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-700 relative overflow-hidden">
         {/* Background Pattern */}
-        <div className="absolute inset-0 bg-[radial-gradient(#ffffff20_1px,transparent_1px)] [background-size:40px_40px]" />
-        
+        <div className="absolute inset-0 bg-[radial-gradient(#ffffff20_1px,transparent_1px)] [background-size:40px_40px] z-0" />
+
         {/* Decorative Elements */}
-        <div className="absolute -left-20 -top-20 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
-        <div className="absolute -right-32 bottom-10 w-[28rem] h-[28rem] bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute -left-20 -top-20 w-96 h-96 bg-white/10 rounded-full blur-3xl z-0" />
+        <div className="absolute -right-32 bottom-10 w-[28rem] h-[28rem] bg-white/10 rounded-full blur-3xl z-0" />
+
+        {/* Full Panel Image */}
+        <img
+          src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop"
+          alt="Learning"
+          className="absolute inset-0 w-full h-full opacity-75 mix-blend-overlay object-cover z-0"
+        />
 
         {/* Content */}
         <div className="relative z-10 flex flex-col justify-center px-16 text-white h-full">
@@ -62,7 +71,7 @@ export default function Login() {
               Master new skills.<br />
               Anytime. Anywhere.
             </h2>
-            
+
             <p className="text-xl text-blue-100 leading-relaxed">
               Join thousands of learners advancing their careers with world-class courses.
             </p>
@@ -72,7 +81,10 @@ export default function Login() {
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex -space-x-4">
                   {[1, 2, 3].map(i => (
-                    <div key={i} className="w-9 h-9 rounded-2xl border-2 border-white bg-white/30 backdrop-blur-md" />
+                    <div
+                      key={i}
+                      className="w-9 h-9 rounded-2xl border-2 border-white bg-white/30 backdrop-blur-md"
+                    />
                   ))}
                 </div>
                 <p className="text-blue-100">
@@ -82,13 +94,6 @@ export default function Login() {
             </div>
           </div>
         </div>
-
-        {/* Optional floating image / illustration */}
-        <img 
-          src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop" 
-          alt="Learning"
-          className="absolute bottom-0 right-0 w-3/5 opacity-75 mix-blend-overlay object-cover"
-        />
       </div>
 
       {/* Right Side - Login Form */}
@@ -110,7 +115,11 @@ export default function Login() {
             </div>
 
             {error && (
-              <div className="mb-6 flex gap-3 text-sm bg-red-50 border border-red-100 text-red-700 rounded-2xl px-4 py-3.5">
+              <div
+                className="mb-6 flex gap-3 text-sm bg-red-50 border border-red-100 text-red-700 rounded-2xl px-4 py-3.5"
+                role="alert"
+                aria-live="polite"
+              >
                 ⚠️ {error}
               </div>
             )}
@@ -122,8 +131,13 @@ export default function Login() {
                   We sent a 6-digit code to <span className="font-medium">{form.email}</span>.
                 </p>
                 <button
-                  onClick={() => navigate('/verify-email', { state: { email: form.email } })}
-                  className="mt-3 text-amber-700 hover:text-amber-800 font-medium underline underline-offset-4"
+                  disabled={loading}
+                  onClick={() =>
+                    navigate('/verify-email', { state: { email: form.email } })
+                  }
+                  className={`mt-3 text-amber-700 hover:text-amber-800 font-medium underline underline-offset-4 ${
+                    loading ? 'opacity-60 cursor-not-allowed' : ''
+                  }`}
                 >
                   Enter code →
                 </button>
@@ -138,8 +152,12 @@ export default function Login() {
                 value={form.email}
                 onChange={set('email')}
                 required
+                autoComplete="email"
+                disabled={loading}
                 icon={<Mail className="w-4 h-4 text-slate-400" />}
-                className="h-12 rounded-2xl"
+                className={`h-12 rounded-2xl focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 ${
+                  loading ? 'opacity-60 cursor-not-allowed' : ''
+                }`}
               />
 
               <div className="relative">
@@ -150,20 +168,33 @@ export default function Login() {
                   value={form.password}
                   onChange={set('password')}
                   required
+                  autoComplete="current-password"
+                  disabled={loading}
                   icon={<Lock className="w-4 h-4 text-slate-400" />}
-                  className="h-12 rounded-2xl pr-12"
+                  className={`h-12 rounded-2xl pr-12 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 ${
+                    loading ? 'opacity-60 cursor-not-allowed' : ''
+                  }`}
                 />
                 <button
                   type="button"
+                  disabled={loading}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-9 text-slate-400 hover:text-slate-600 transition-colors"
+                  className={`absolute right-4 top-9 text-slate-400 hover:text-slate-600 transition-colors ${
+                    loading ? 'opacity-60 cursor-not-allowed' : ''
+                  }`}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
 
               <div className="flex justify-end">
-                <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline font-medium">
+                <Link
+                  to="/forgot-password"
+                  className={`text-sm text-blue-600 hover:underline font-medium ${
+                    loading ? 'opacity-60 pointer-events-none' : ''
+                  }`}
+                >
                   Forgot password?
                 </Link>
               </div>
@@ -171,9 +202,13 @@ export default function Login() {
               <Button
                 type="submit"
                 loading={loading}
-                className="w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-base font-semibold shadow-lg shadow-blue-500/30 transition-all active:scale-[0.985]"
+                disabled={!canSubmit}
+                className={`w-full h-12 rounded-2xl bg-blue-600 hover:bg-blue-700 text-base font-semibold shadow-lg shadow-blue-500/30 transition-all active:scale-[0.985] ${
+                  !canSubmit ? 'opacity-60 cursor-not-allowed hover:bg-blue-600' : ''
+                }`}
               >
-                Sign in <ArrowRight className="ml-2 w-4 h-4" />
+                {loading ? 'Signing in...' : 'Sign in'}
+                {!loading && <ArrowRight className="ml-2 w-4 h-4" />}
               </Button>
             </form>
           </div>
@@ -181,19 +216,15 @@ export default function Login() {
           <div className="mt-6 text-center">
             <p className="text-sm text-slate-600">
               Don't have an account?{' '}
-              <Link to="/register" className="text-blue-600 font-semibold hover:underline">
+              <Link
+                to="/register"
+                className={`text-blue-600 font-semibold hover:underline ${
+                  loading ? 'opacity-60 pointer-events-none' : ''
+                }`}
+              >
                 Sign up free
               </Link>
             </p>
-          </div>
-
-          {/* Demo Accounts */}
-          <div className="mt-8 text-center">
-            <p className="text-xs uppercase tracking-widest text-slate-500 mb-3">Demo Accounts</p>
-            <div className="inline-flex flex-col gap-2 text-xs bg-slate-100 rounded-2xl p-4 text-left">
-              <div>student@learnly.com <span className="text-slate-400">/ learn1234</span></div>
-              <div>instructor@learnly.com <span className="text-slate-400">/ teach1234</span></div>
-            </div>
           </div>
         </div>
       </div>

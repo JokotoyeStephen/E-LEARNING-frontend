@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { instructorService } from '../../services/instructorService'
 import { courseService } from '../../services/courseService'
 import Loader from '../../components/ui/Loader'
+import { triggerBlobDownload } from '../../utils/download'
 
 const DIFF_COLORS = {
   Easy:   'bg-green-100 text-green-700',
@@ -82,6 +83,23 @@ export default function InstructorCourseAnalytics() {
   const { courseTitle, price, totalEnrollments, completedCount, completionRate, earnings,
           quizStats, avgRating, totalReviews, reviews, questions, unansweredCount, enrollments } = data
 
+  const exportStudentsCsv = () => {
+    const header = ['Name', 'Email', 'Enrolled At', 'Completed', 'Completed At', 'Mastery %', 'Quiz Attempts', 'Current Difficulty']
+    const rows = enrollments.map(e => [
+      e.name, e.email,
+      new Date(e.enrolledAt).toISOString().slice(0, 10),
+      e.completed ? 'Yes' : 'No',
+      e.completedAt ? new Date(e.completedAt).toISOString().slice(0, 10) : '',
+      e.competenceScore, e.quizAttempts, e.currentDifficulty,
+    ])
+    const csv = [header, ...rows]
+      .map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
+      .join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const safeName = courseTitle.replace(/[^a-z0-9\- ]/gi, '').trim().replace(/\s+/g, '-')
+    triggerBlobDownload(blob, `${safeName}-students.csv`)
+  }
+
   return (
     <div className="page-container max-w-6xl">
       <Link to="/dashboard" className="text-sm text-primary-600 hover:underline">← Back to dashboard</Link>
@@ -140,7 +158,15 @@ export default function InstructorCourseAnalytics() {
 
         {/* Enrollment list */}
         <section className="card p-6">
-          <h2 className="font-display text-lg font-bold text-gray-900 mb-4">Students ({totalEnrollments})</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display text-lg font-bold text-gray-900">Students ({totalEnrollments})</h2>
+            {enrollments.length > 0 && (
+              <button onClick={exportStudentsCsv}
+                className="text-xs font-semibold text-primary-600 hover:text-primary-700 border border-primary-200 hover:border-primary-300 px-3 py-1.5 rounded-lg transition-all hover:bg-primary-50">
+                ⬇ Export CSV
+              </button>
+            )}
+          </div>
           {enrollments.length === 0 ? (
             <p className="text-sm text-gray-400">No one has enrolled yet.</p>
           ) : (

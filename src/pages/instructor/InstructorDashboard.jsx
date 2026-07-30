@@ -31,7 +31,7 @@ function StatCard({ icon, value, label, sub, color }) {
   )
 }
 
-function CourseRow({ course, onDelete }) {
+function CourseRow({ course, onDelete, onEdit }) {
   const [deleting, setDeleting] = useState(false)
   const doDelete = async () => {
     if (!confirm(`Delete "${course.title}"?`)) return
@@ -72,6 +72,10 @@ function CourseRow({ course, onDelete }) {
 
       {/* Actions */}
       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+        <button onClick={() => onEdit(course)}
+          className="text-xs border border-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+          Edit
+        </button>
         <Link to={`/instructor/courses/${course._id}`}
           className="text-xs border border-primary-200 text-primary-600 px-3 py-1.5 rounded-lg hover:bg-primary-50 transition-colors font-medium">
           Analytics
@@ -89,9 +93,21 @@ function CourseRow({ course, onDelete }) {
   )
 }
 
-function CreateCourseModal({ onClose, onCreate }) {
+function CourseModal({ editingCourse, onClose, onCreate, onUpdate }) {
   const { user } = useAuth()
-  const [form,    setForm]    = useState({ ...EMPTY_FORM, instructor: user?.name || '' })
+  const isEdit = !!editingCourse
+  const [form,    setForm]    = useState(() =>
+    isEdit
+      ? {
+          ...EMPTY_FORM,
+          ...editingCourse,
+          syllabus: editingCourse.syllabus?.length ? editingCourse.syllabus : [''],
+          topics:   editingCourse.topics?.length
+            ? editingCourse.topics.map(t => ({ ...t, lesson: { videoUrl: t.lesson?.videoUrl || '' } }))
+            : [{ name: '', description: '', order: 0, lesson: { videoUrl: '' } }],
+        }
+      : { ...EMPTY_FORM, instructor: user?.name || '' }
+  )
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState('')
   const [step,    setStep]    = useState(1)  // 1=basics, 2=details
@@ -130,11 +146,16 @@ function CreateCourseModal({ onClose, onCreate }) {
         })),
         tag:      form.tag || undefined,
       }
-      const created = await courseService.createCourse(payload)
-      onCreate(created)
+      if (isEdit) {
+        const updated = await courseService.updateCourse(editingCourse._id, payload)
+        onUpdate(updated)
+      } else {
+        const created = await courseService.createCourse(payload)
+        onCreate(created)
+      }
       onClose()
     } catch (err) {
-      setError(err.response?.data?.message ?? 'Failed to create course.')
+      setError(err.response?.data?.message ?? `Failed to ${isEdit ? 'update' : 'create'} course.`)
     } finally { setLoading(false) }
   }
 
@@ -148,7 +169,7 @@ function CreateCourseModal({ onClose, onCreate }) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
           <div>
-            <h2 className="font-display text-lg font-bold text-gray-900">Create New Course</h2>
+            <h2 className="font-display text-lg font-bold text-gray-900">{isEdit ? 'Edit Course' : 'Create New Course'}</h2>
             <p className="text-xs text-gray-400 mt-0.5">Step {step} of 2 — {step === 1 ? 'Basic info' : 'Syllabus & topics'}</p>
           </div>
           <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
@@ -352,8 +373,8 @@ function CreateCourseModal({ onClose, onCreate }) {
             : <button type="submit" onClick={handleSubmit} disabled={loading}
                 className="btn-primary text-sm disabled:opacity-60">
                 {loading
-                  ? <><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.2"/><path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/></svg>Creating...</>
-                  : <>Publish Course ✦</>}
+                  ? <><svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity="0.2"/><path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/></svg>{isEdit ? 'Saving...' : 'Creating...'}</>
+                  : <>{isEdit ? 'Save Changes ✦' : 'Publish Course ✦'}</>}
               </button>
           }
         </div>
@@ -368,6 +389,10 @@ export default function InstructorDashboard() {
   const [overview, setOverview] = useState(null)
   const [loading,  setLoading]  = useState(true)
   const [showModal, setShowModal] = useState(false)
+  const [editingCourse, setEditingCourse] = useState(null)
+
+  const openCreate = () => { setEditingCourse(null); setShowModal(true) }
+  const openEdit   = course => { setEditingCourse(course); setShowModal(true) }
 
   useEffect(() => {
     courseService.getMyCourses()
@@ -398,7 +423,7 @@ export default function InstructorDashboard() {
               </h1>
               <p className="text-orange-100 text-sm mt-1">Manage your courses and grow your audience.</p>
             </div>
-            <button onClick={() => setShowModal(true)}
+            <button onClick={() => openCreate()}
               className="flex items-center gap-2 bg-white text-primary-700 font-bold px-5 py-2.5 rounded-xl hover:bg-orange-50 active:scale-[0.98] transition-all shadow-lg text-sm">
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M8 2v12M2 8h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
@@ -438,7 +463,7 @@ export default function InstructorDashboard() {
                 {courses.length === 0 ? 'No courses yet' : `${courses.length} course${courses.length !== 1 ? 's' : ''}`}
               </p>
             </div>
-            <button onClick={() => setShowModal(true)}
+            <button onClick={() => openCreate()}
               className="flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-700 border border-primary-200 hover:border-primary-300 px-3.5 py-2 rounded-xl transition-all hover:bg-primary-50">
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                 <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -459,7 +484,7 @@ export default function InstructorDashboard() {
               <p className="text-sm text-gray-500 max-w-xs mb-6">
                 Create your first course and share your knowledge with learners worldwide.
               </p>
-              <button onClick={() => setShowModal(true)} className="btn-primary text-sm">
+              <button onClick={() => openCreate()} className="btn-primary text-sm">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                   <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                 </svg>
@@ -473,6 +498,7 @@ export default function InstructorDashboard() {
                   key={course._id}
                   course={course}
                   onDelete={id => setCourses(cs => cs.filter(c => c._id !== id))}
+                  onEdit={openEdit}
                 />
               ))}
             </div>
@@ -500,9 +526,11 @@ export default function InstructorDashboard() {
       </div>
 
       {showModal && (
-        <CreateCourseModal
-          onClose={() => setShowModal(false)}
+        <CourseModal
+          editingCourse={editingCourse}
+          onClose={() => { setShowModal(false); setEditingCourse(null) }}
           onCreate={course => setCourses(cs => [course, ...cs])}
+          onUpdate={updated => setCourses(cs => cs.map(c => c._id === updated._id ? updated : c))}
         />
       )}
     </div>
